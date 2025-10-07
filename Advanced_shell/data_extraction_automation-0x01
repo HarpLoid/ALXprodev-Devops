@@ -15,4 +15,4 @@ calculated_weight=$(bc <<< "scale=1; $weight / 10.0")
 formatted_height=$(printf "%.1f", $calculated_height)
 formatted_weight=$(printf "%.1f", $calculated_weight)
 
-echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m"
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall"
