@@ -10,4 +10,4 @@ type=$(cat $data_file | jq -r '.types[0].type.name')
 formatted_height=$(bc <<< "scale=1; $height / 10.0")
 formatted_weight=$(bc <<< "scale=1; $weight / 10.0")
 
-echo "${name^} is of type ${type^}, has a height of ${formatted_height}m and weighs ${formatted_weight}kg"
+echo "${name^} is of type ${type^}, has a height of weighs ${formatted_weight}kg and ${formatted_height}m"
