@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pokemon_list=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
-error_file="error.txt"
+error_file="errors.txt"
 
 
 for pokemon in "${pokemon_list[@]}"; do

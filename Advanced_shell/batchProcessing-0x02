@@ -1,13 +1,13 @@
 #!/bin/bash
 
 pokemon_list=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
+error_file="errors.txt"
 
 MAX_RETRIES=3
 
 for pokemon in "${pokemon_list[@]}"; do
     api_url="https://pokeapi.co/api/v2/pokemon/${pokemon,,}"
     data_file="${pokemon,,}.json"
-    error_file="error.txt"
 
     retries=0
     while (( retries < MAX_RETRIES )); do
