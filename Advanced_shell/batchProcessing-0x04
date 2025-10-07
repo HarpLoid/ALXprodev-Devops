@@ -1,18 +1,97 @@
 #!/bin/bash
+# Script to fetch Pokémon data in parallel using background processes,
+# demonstrating job control with PIDs, jobs, and wait.
 
-pokemon_list=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
-error_file="errors.txt"
+# --- Configuration ---
+POKEMON_LIST=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
+MAX_RETRIES=3
+ERROR_FILE="errors.txt"
+# Clear the error log before starting
+echo -n "" > "$ERROR_FILE"
 
+# Array to store the Process IDs (PIDs) of all background jobs
+PIDS=()
 
-for pokemon in "${pokemon_list[@]}"; do
-    api_url="https://pokeapi.co/api/v2/pokemon/${pokemon,,}"
-    data_file="${pokemon,,}.json"
+echo "--- Starting Parallel Pokémon Data Fetch (Max Retries: $MAX_RETRIES) ---"
+echo "Process management: Tracking all jobs and PIDs for explicit waiting."
+echo "------------------------------------------------------------------------"
 
-    curl -Ss -o "$data_file" "$api_url" 2>> "$error_file" &
+# Function to handle fetching and retries for a single Pokémon
+# This function is executed entirely in the background.
+fetch_with_retry() {
+    local pokemon="$1"
+    local lowercase_pokemon="${pokemon,,}"
+    local api_url="https://pokeapi.co/api/v2/pokemon/${lowercase_pokemon}"
+    local data_file="${lowercase_pokemon}.json"
+    local retry_count=0
+    
+    # Use the PID ($$) of the background process for logging clarity
+    local process_id="$$"
 
-    echo "Fetching data for $pokemon (PID: $!)"
+    echo "[$process_id] Starting fetch for $pokemon..."
+    
+    while (( retry_count < MAX_RETRIES )); do
+        
+        if (( retry_count > 0 )); then
+            echo "[$process_id] Retry attempt $((retry_count + 1)) for $pokemon (Last error: $?)..."
+        fi
+        
+        # Execute curl command (Silent, Show errors, Output to file) 
+        # and check the exit status of the curl command
+        if curl -sS -o "$data_file" "$api_url" 2>> "$ERROR_FILE"; then
+            echo "[$process_id] SUCCESS: $pokemon data saved to $data_file"
+            return 0 # Exit function on success
+        else
+            ((retry_count++))
+            sleep 5 # Wait before retrying
+        fi
+        
+    done
+    
+    # If the loop finished without success
+    echo "[$process_id] ERROR: Failed to fetch $pokemon after $MAX_RETRIES attempts. Skipping." >> "$ERROR_FILE"
+    rm -f "$data_file" # Clean up potentially incomplete file
+    return 1 # Exit function with failure status
+}
+
+# --- Main Execution ---
+
+# Loop through the list and start each fetch in the background
+for pokemon in "${POKEMON_LIST[@]}"; do
+    fetch_with_retry "$pokemon" &
+    
+    # Capture the PID ($!) of the last background command and store it
+    PIDS+=($!)
 done
 
-wait
+# --- Process Management: jobs and wait ---
+echo "All background processes initiated. PIDs tracked: ${PIDS[*]}"
+echo "Listing active jobs with PID:"
+# The 'jobs -l' command lists all jobs (L) including their PID
+jobs -l
 
-echo "All data fetched. check $error_file for any errors."
+# Wait for all background jobs whose PIDs were stored in the PIDS array
+# Looping through the array ensures we wait for every job started in this script.
+for pid in "${PIDS[@]}"; do
+    wait "$pid"
+done
+
+# --- Demonstration of kill (Cleanup/Timeout Logic) ---
+# NOTE: Since 'wait' was used, all processes should be terminated (T/Done).
+# This section demonstrates how 'kill' would be used if necessary.
+echo "------------------------------------------------------------------------"
+echo "Cleanup using 'jobs -p' and 'kill':"
+
+# Use jobs -p to list the PIDs of any still running jobs
+RUNNING_PIDS=$(jobs -p)
+
+if [[ -n "$RUNNING_PIDS" ]]; then
+    echo "WARNING: Forcibly terminating remaining jobs: $RUNNING_PIDS"
+    # kill -9 (SIGKILL) forcefully terminates the processes by their PIDs
+    kill -9 "$RUNNING_PIDS" 2>/dev/null
+else
+    echo "No orphaned jobs detected. All processes terminated successfully."
+fi
+
+echo "All parallel fetches are complete."
+echo "Check $ERROR_FILE for details on any failed requests."
