@@ -2,11 +2,13 @@
 
 data_file="data.json"
 
-name=$(cat $data_file | jq -r '.name')
+lowercase_name=$(cat $data_file | jq -r '.name')
 height=$(cat $data_file | jq -r '.height')
 weight=$(cat $data_file | jq -r '.weight')
-type=$(cat $data_file | jq -r '.types[0].type.name')
+lowercase_type=$(cat $data_file | jq -r '.types[0].type.name')
 
+name=${lowercase_name^}
+type=${lowercase_type^}
 calculated_height=$(bc <<< "scale=1; $height / 10.0")
 calculated_weight=$(bc <<< "scale=1; $weight / 10.0")
 
