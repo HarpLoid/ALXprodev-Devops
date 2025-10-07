@@ -1,0 +1,24 @@
+#!/bin/bash
+
+data_file_list=("bulbasaur.json" "ivysaur.json" "venusaur.json" "charmander.json" "charmeleon.json")
+report_file="report.csv"
+
+echo "Name,Height (m),Weight (kg)" > "$report_file"
+
+for data_file in "${data_file_list[@]}"; do
+    name=$(< "$data_file" jq -r '.name')
+    height=$(< "$data_file" jq -r '.height')
+    weight=$(< "$data_file" jq -r '.weight')
+
+    echo "$name,$(bc <<< "scale=1; $height / 10.0"),$(bc <<< "scale=1; $weight / 10.0")" >> "$report_file"
+done
+
+ave_height=$(cat $report_file | awk -F, 'NR>1 {sum+=$2} END {printf "%.2f\n", sum/(NR-1)}')
+ave_weight=$(cat $report_file | awk -F, 'NR>1 {sum+=$3} END {printf "%.2f\n", sum/(NR-1)}')
+
+echo "" >> "$report_file"
+
+{
+echo "Average Height: $ave_height m"
+echo "Average Weight: $ave_weight kg"
+} >> "$report_file"

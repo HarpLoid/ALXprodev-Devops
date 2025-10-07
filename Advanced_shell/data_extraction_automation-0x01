@@ -1,0 +1,10 @@
+#!/bin/bash
+
+data_file="data.json"
+
+name=$(cat $data_file | jq -r '.name')
+height=$(cat $data_file | jq -r '.height')
+weight=$(cat $data_file | jq -r '.weight')
+type=$(cat $data_file | jq -r '.types[0].type.name')
+
+echo "${name^} is of type ${type^}, has a height of 0.${height}m and weighs ${weight}kg"

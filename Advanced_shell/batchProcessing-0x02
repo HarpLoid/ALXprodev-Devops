@@ -1,0 +1,35 @@
+#!/bin/bash
+
+pokemon_list=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
+
+MAX_RETRIES=3
+
+for pokemon in "${pokemon_list[@]}"; do
+    api_url="https://pokeapi.co/api/v2/pokemon/${pokemon,,}"
+    data_file="${pokemon,,}.json"
+    error_file="error.txt"
+
+    retries=0
+    while (( retries < MAX_RETRIES )); do
+
+        if (( retries > 0 )); then
+            echo "Retry attempt $((retries + 1)) for $pokemon after failure."
+        fi
+
+        echo "Fetching data for $pokemon..."
+
+        if ( curl -Ss -o "$data_file" "$api_url" 2>> "$error_file" ); then
+            echo "Data for $pokemon saved to $data_file"
+            break
+        else
+            ((retries++))
+            sleep 5
+        fi
+
+    done
+    if (( retries == MAX_RETRIES )); then
+        echo "Failed to fetch data for $pokemon after $MAX_RETRIES attempts." >> "$error_file"
+        continue
+    fi
+    sleep 2
+done

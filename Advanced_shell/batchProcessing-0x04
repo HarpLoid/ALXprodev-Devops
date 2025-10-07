@@ -1,0 +1,18 @@
+#!/bin/bash
+
+pokemon_list=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
+error_file="error.txt"
+
+
+for pokemon in "${pokemon_list[@]}"; do
+    api_url="https://pokeapi.co/api/v2/pokemon/${pokemon,,}"
+    data_file="${pokemon,,}.json"
+
+    curl -Ss -o "$data_file" "$api_url" 2>> "$error_file" &
+
+    echo "Fetching data for $pokemon (PID: $!)"
+done
+
+wait
+
+echo "All data fetched. check $error_file for any errors."
