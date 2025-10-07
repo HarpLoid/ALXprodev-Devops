@@ -2,17 +2,21 @@
 
 data_file="data.json"
 
-lowercase_name=$(cat $data_file | jq -r '.name')
-height=$(cat $data_file | jq -r '.height')
-weight=$(cat $data_file | jq -r '.weight')
-lowercase_type=$(cat $data_file | jq -r '.types[0].type.name')
+lower_name=$(jq -r '.name' "$data_file")
+lower_type=$(jq -r '.types[0].type.name' "$data_file")
+height=$(jq -r '.height' "$data_file")
+weight=$(jq -r '.weight' "$data_file")
 
-name=${lowercase_name^}
-type=${lowercase_type^}
-calculated_height=$(bc <<< "scale=1; $height / 10.0")
-calculated_weight=$(bc <<< "scale=1; $weight / 10.0")
+name=$(echo "$lower_name" | sed 's/./\u&/')
+type=$(echo "$lower_type" | sed 's/./\u&/')
 
-formatted_height=$(printf "%.1f", $calculated_height)
-formatted_weight=$(printf "%.1f", $calculated_weight)
+read -r formatted_height formatted_weight << EOF
+$(awk -v h="$height" -v w="$weight" 'BEGIN {
+    formatted_height = sprintf("%.1f", h / 10);
+    formatted_weight = sprintf("%.1f", w / 10);
+
+    print formatted_height, formatted_weight
+}')
+EOF
 
 echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."
