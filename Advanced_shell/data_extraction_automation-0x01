@@ -7,7 +7,10 @@ height=$(cat $data_file | jq -r '.height')
 weight=$(cat $data_file | jq -r '.weight')
 type=$(cat $data_file | jq -r '.types[0].type.name')
 
-formatted_height=$(bc <<< "scale=1; $height / 10.0")
-formatted_weight=$(bc <<< "scale=1; $weight / 10.0")
+calculated_height=$(bc <<< "scale=1; $height / 10.0")
+calculated_weight=$(bc <<< "scale=1; $weight / 10.0")
 
-echo "${name^} is of type ${type^}, has a height of weighs ${formatted_weight}kg and ${formatted_height}m"
+formatted_height=$(printf "%.1f", $calculated_height)
+formatted_weight=$(printf "%.1f", $calculated_weight)
+
+echo "${name^} is of type ${type^}, weighs ${formatted_weight}kg, and is ${formatted_height}m"
