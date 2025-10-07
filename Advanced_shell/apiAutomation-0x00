@@ -5,4 +5,4 @@ api_url="https://pokeapi.co/api/v2/pokemon/$name/"
 data_file="data.json"
 error_file="error.txt"
 
-curl -o "$data_file" "$api_url" 2>> "$error_file"
+curl -Ss -o "$data_file" "$api_url" 2>> "$error_file"
